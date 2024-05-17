@@ -1,0 +1,167 @@
+-- vital --
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/heavyraining/ModifiedKavoUI/main/main"))()
+
+local colors = {
+	SchemeColor = Color3.fromRGB(46, 48, 43),
+	Background = Color3.fromRGB(13, 15, 12),
+	Header = Color3.fromRGB(36, 38, 35),
+	TextColor = Color3.fromRGB(152, 99, 53),
+	ElementColor = Color3.fromRGB(24, 24, 24)
+}
+
+local Window = Library.CreateLib("Laredo (by @therapisttt)", colors)
+
+-- tabs --
+local WeaponsTab = Window:NewTab("Weapons")
+local SettingsTab = Window:NewTab("UI Settings")
+
+-- sections --
+local ItemGiverSection = WeaponsTab:NewSection("Get Item")
+local WeaponModsSection = WeaponsTab:NewSection("Modify Weapon")
+
+local SettingsSection = SettingsTab:NewSection("UI Settings")
+local ColourSettingsSection = SettingsTab:NewSection("Colour Settings")
+
+-- variables --
+local scriptIcon = "rbxassetid://9756596201"
+
+local showGunsOnly = false
+
+-- functions --
+local function notify(title:string, text:string, duration:number, button1:string?, button2:string?)
+	if button1 then
+		if not button2 then
+			game:GetService("StarterGui"):SetCore("SendNotification", {
+				Title = title,
+				Text = text,
+				Icon = scriptIcon,
+				Duration = duration,
+				Button1 = button1
+			})
+		else
+			game:GetService("StarterGui"):SetCore("SendNotification", {
+				Title = title,
+				Text = text,
+				Icon = scriptIcon,
+				Duration = duration,
+				Button1 = button1,
+				Button2 = button2
+			})
+		end
+	else
+		game:GetService("StarterGui"):SetCore("SendNotification", {
+			Title = title,
+			Text = text,
+			Icon = scriptIcon,
+			Duration = duration
+		})
+	end
+end
+
+local function refreshItemsDropdown(dropdown, gunsOnly:boolean?)
+	local detectedWeapons = {}
+	
+	for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+		for _, item in ipairs(player.Backpack:GetChildren()) do
+			if not table.find(detectedWeapons, item.Name) then
+				if not gunsOnly then
+					table.insert(detectedWeapons, item.Name)
+				elseif item:FindFirstChild("ACS_Settings") then
+					table.insert(detectedWeapons, item.Name)
+				end
+			end
+		end
+	end
+	
+	dropdown:Refresh(detectedWeapons)
+end
+
+local itemGiverDropdown = ItemGiverSection:NewDropdown("Get Item", "Gets a item from first detected players backpacks", nil, function(currentOption)
+	local weaponFound = nil
+	local oldOwner = nil
+	
+	for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+		if not weaponFound then
+			if player ~= game:GetService("Players").LocalPlayer then
+				for _, item in ipairs(player.Backpack:GetChildren()) do
+					if item.Name == currentOption then
+						weaponFound = item
+						oldOwner = item.Parent.Parent.Name
+						item.Parent = game:GetService("Players").LocalPlayer.Backpack
+					end
+				end
+			end
+		end
+	end
+	
+	if weaponFound then
+		notify(
+			"Weapon Found",
+			"We found the desired weapon in ".. oldOwner .."'s backpack.",
+			3
+		)
+	else
+		notify(
+			"Weapon Found",
+			"We couldn't find the weapon anywhere",
+			2
+		)
+	end
+end)
+
+refreshItemsDropdown(itemGiverDropdown, false) -- first tick
+
+ItemGiverSection:NewToggle("Show Guns Only", "ToggleInfo", function(state)
+	showGunsOnly = state
+	refreshItemsDropdown(itemGiverDropdown, state)
+end)
+
+ItemGiverSection:NewButton("Refresh Give Weapons List", "Refreshes list of weapons above", function()
+	refreshItemsDropdown(itemGiverDropdown, showGunsOnly)
+end)
+
+WeaponModsSection:NewButton("Infinite Ammo Reserves", "Gives held weapon infinite reserve magazines", function()
+	local tool = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
+	
+	if tool then
+		if tool:FindFirstChild("RepValues") then
+			tool.RepValues.StoredAmmo.Value = 9999999999999
+			
+			game:GetService("Players").LocalPlayer.Character.Humanoid:UnequipTools()
+			game:GetService("Players").LocalPlayer.Character.Humanoid:EquipTool(tool)
+			notify("Success", "We successfully modified your guns magazine reserves.", 3, "Thanks.")
+		else
+			notify("Not Holding Gun", "The item you're holding isn't a gun", 3)
+		end
+	else
+		notify("Not Holding Gun", "You need to hold out the gun you wanna modify.", 3, "Fine.")
+	end
+end)
+
+WeaponModsSection:NewButton("Infinite Magazines", "Gives the held weapons magazine infinite bullets", function()
+	local tool = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
+
+	if tool then
+		if tool:FindFirstChild("RepValues") then
+			tool.RepValues.Mag.Value = 9999999999999
+			
+			game:GetService("Players").LocalPlayer.Character.Humanoid:UnequipTools()
+			game:GetService("Players").LocalPlayer.Character.Humanoid:EquipTool(tool)
+			notify("Success", "We successfully modified your guns magazine size.", 3, "Thanks.")
+		else
+			notify("Not Holding Gun", "The item you're holding isn't a gun", 3)
+		end
+	else
+		notify("Not Holding Gun", "You need to hold out the gun you wanna modify.", 3, "Fine.")
+	end
+end)
+
+SettingsSection:NewKeybind("Toggle UI Keybind", "Default key is RightShift", Enum.KeyCode.RightShift, function()
+	Library:ToggleUI()
+end)
+
+for theme, color in pairs(colors) do
+	ColourSettingsSection:NewColorPicker(theme, "Change your "..theme, color, function(color3)
+		Library:ChangeColor(theme, color3)
+	end)
+end
