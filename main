@@ -13,6 +13,7 @@ local Window = Library.CreateLib("Laredo (by @therapisttt)", colors)
 
 -- tabs --
 local WeaponsTab = Window:NewTab("Weapons")
+local ShopTab = Window:NewTab("Shop")
 local SettingsTab = Window:NewTab("UI Settings")
 
 -- sections --
@@ -21,6 +22,7 @@ local WeaponModsSection = WeaponsTab:NewSection("Modify Weapon")
 
 local SettingsSection = SettingsTab:NewSection("UI Settings")
 local ColourSettingsSection = SettingsTab:NewSection("Colour Settings")
+local ShopSection = SettingsTab:NewSection("Shop")
 
 -- variables --
 local scriptIcon = "rbxassetid://9756596201"
@@ -60,7 +62,7 @@ end
 
 local function refreshItemsDropdown(dropdown, gunsOnly:boolean?)
 	local detectedWeapons = {}
-	
+
 	for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
 		for _, item in ipairs(player.Backpack:GetChildren()) do
 			if not table.find(detectedWeapons, item.Name) then
@@ -72,14 +74,14 @@ local function refreshItemsDropdown(dropdown, gunsOnly:boolean?)
 			end
 		end
 	end
-	
+
 	dropdown:Refresh(detectedWeapons)
 end
 
 local itemGiverDropdown = ItemGiverSection:NewDropdown("Get Item", "Gets a item from first detected players backpacks", nil, function(currentOption)
 	local weaponFound = nil
 	local oldOwner = nil
-	
+
 	for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
 		if not weaponFound then
 			if player ~= game:GetService("Players").LocalPlayer then
@@ -93,7 +95,7 @@ local itemGiverDropdown = ItemGiverSection:NewDropdown("Get Item", "Gets a item 
 			end
 		end
 	end
-	
+
 	if weaponFound then
 		notify(
 			"Weapon Found",
@@ -120,13 +122,21 @@ ItemGiverSection:NewButton("Refresh Give Weapons List", "Refreshes list of weapo
 	refreshItemsDropdown(itemGiverDropdown, showGunsOnly)
 end)
 
+ShopSection:NewButton("Open Cartel Shop", "Opens illegal weapon dealer", function()
+	game.Players.LocalPlayer.PlayerGui.UserInterface.GunDealer.Illegal.Visible = true
+end)
+
+ShopSection:NewButton("Open Hardware Shop", "Only for drill", function()
+	game.Players.LocalPlayer.PlayerGui.UserInterface.GunDealer.Hardware.Visible = true
+end)
+
 WeaponModsSection:NewButton("Infinite Ammo Reserves", "Gives held weapon infinite reserve magazines", function()
 	local tool = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
-	
+
 	if tool then
 		if tool:FindFirstChild("RepValues") then
 			tool.RepValues.StoredAmmo.Value = 9999999999999
-			
+
 			game:GetService("Players").LocalPlayer.Character.Humanoid:UnequipTools()
 			game:GetService("Players").LocalPlayer.Character.Humanoid:EquipTool(tool)
 			notify("Success", "We successfully modified your guns magazine reserves.", 3, "Thanks.")
@@ -144,7 +154,7 @@ WeaponModsSection:NewButton("Infinite Magazines", "Gives the held weapons magazi
 	if tool then
 		if tool:FindFirstChild("RepValues") then
 			tool.RepValues.Mag.Value = 9999999999999
-			
+
 			game:GetService("Players").LocalPlayer.Character.Humanoid:UnequipTools()
 			game:GetService("Players").LocalPlayer.Character.Humanoid:EquipTool(tool)
 			notify("Success", "We successfully modified your guns magazine size.", 3, "Thanks.")
