@@ -14,6 +14,7 @@ local Window = Library.CreateLib("Laredo (by @therapisttt)", colors)
 -- tabs --
 local WeaponsTab = Window:NewTab("Weapons")
 local ShopTab = Window:NewTab("Shop")
+local MiscTab = Window:NewTab("Miscellaneous")
 local SettingsTab = Window:NewTab("UI Settings")
 
 -- sections --
@@ -23,6 +24,8 @@ local WeaponModsSection = WeaponsTab:NewSection("Modify Weapon")
 local SettingsSection = SettingsTab:NewSection("UI Settings")
 local ColourSettingsSection = SettingsTab:NewSection("Colour Settings")
 local ShopSection = ShopTab:NewSection("Shop")
+
+local MiscSection = MiscTab:NewSection("Miscellaneous")
 
 -- variables --
 local scriptIcon = "rbxassetid://9756596201"
@@ -120,6 +123,7 @@ end)
 
 ItemGiverSection:NewButton("Refresh Give Weapons List", "Refreshes list of weapons above", function()
 	refreshItemsDropdown(itemGiverDropdown, showGunsOnly)
+	notify("Refreshed Items List", "The items list is now up-to-date.", 3, "Okay.")
 end)
 
 ShopSection:NewButton("Open Cartel Shop", "Opens illegal weapon dealer", function()
@@ -163,6 +167,39 @@ WeaponModsSection:NewButton("Infinite Magazines", "Gives the held weapons magazi
 		end
 	else
 		notify("Not Holding Gun", "You need to hold out the gun you wanna modify.", 3, "Fine.")
+	end
+end)
+
+local proxConnection = nil
+local originalHoldDurations = {}
+
+MiscSection:NewToggle("Instant Proximity Prompts", "Makes all proximity prompts instant", function(state)
+	if state then
+		for _, descendant in ipairs(game.Workspace:GetDescendants()) do
+			if descendant:IsA("ProximityPrompt") then
+				originalHoldDurations[descendant] = descendant.HoldDuration
+				descendant.HoldDuration = 0
+			end
+		end
+
+		proxConnection = game:GetService("Workspace").DescendantAdded:Connect(function(descendant)
+			if descendant:IsA("ProximityPrompt") then
+				originalHoldDurations[descendant] = descendant.HoldDuration
+				descendant.HoldDuration = 0
+			end
+		end)
+		
+		notify("Running", "All proximity prompts are now instant.", 3, "Okay.")
+	else
+		proxConnection:Disconnect()
+		for prompt, duration in pairs(originalHoldDurations) do
+			if prompt and prompt:IsA("ProximityPrompt") then
+				prompt.HoldDuration = duration
+			end
+		end
+		originalHoldDurations = {}
+		
+		notify("Disabled", "Proximity prompts will no longer be instant.", 3, "Fine.")
 	end
 end)
 
