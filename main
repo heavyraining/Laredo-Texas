@@ -22,7 +22,7 @@ local WeaponModsSection = WeaponsTab:NewSection("Modify Weapon")
 
 local SettingsSection = SettingsTab:NewSection("UI Settings")
 local ColourSettingsSection = SettingsTab:NewSection("Colour Settings")
-local ShopSection = SettingsTab:NewSection("Shop")
+local ShopSection = ShopTab:NewSection("Shop")
 
 -- variables --
 local scriptIcon = "rbxassetid://9756596201"
