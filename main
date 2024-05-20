@@ -26,6 +26,7 @@ local ColourSettingsSection = SettingsTab:NewSection("Colour Settings")
 local ShopSection = ShopTab:NewSection("Shop")
 
 local MiscSection = MiscTab:NewSection("Miscellaneous")
+local MiscOtherScriptsSection = MiscTab:NewSection("Other Scripts")
 
 -- variables --
 local scriptIcon = "rbxassetid://9756596201"
@@ -201,6 +202,10 @@ MiscSection:NewToggle("Instant Proximity Prompts", "Makes all proximity prompts 
 		
 		notify("Disabled", "Proximity prompts will no longer be instant.", 3, "Fine.")
 	end
+end)
+
+MiscOtherScriptsSection:NewButton("Infinite Yield", "Runs Infinite Yield", function()
+	loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))()
 end)
 
 SettingsSection:NewKeybind("Toggle UI Keybind", "Default key is RightShift", Enum.KeyCode.RightShift, function()
