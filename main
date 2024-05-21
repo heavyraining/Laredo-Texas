@@ -135,39 +135,35 @@ ShopSection:NewButton("Open Hardware Shop", "Only for drill", function()
 	game.Players.LocalPlayer.PlayerGui.UserInterface.GunDealer.Hardware.Visible = true
 end)
 
-WeaponModsSection:NewButton("Infinite Ammo Reserves", "Gives held weapon infinite reserve magazines", function()
-	local tool = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
-
-	if tool then
+WeaponModsSection:NewButton("Infinite Ammo Reserves", "Gives all weapons in inventory infinite reserve magazines", function()
+	local gunsDetected = 0
+	for _, tool in ipairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
 		if tool:FindFirstChild("RepValues") then
+			gunsDetected = gunsDetected + 1
 			tool.RepValues.StoredAmmo.Value = 9999999999999
-
-			game:GetService("Players").LocalPlayer.Character.Humanoid:UnequipTools()
-			game:GetService("Players").LocalPlayer.Character.Humanoid:EquipTool(tool)
-			notify("Success", "We successfully modified your guns magazine reserves.", 3, "Thanks.")
-		else
-			notify("Not Holding Gun", "The item you're holding isn't a gun", 3)
 		end
+	end
+	
+	if gunsDetected > 0 then
+		notify("Finished", "Modified "..gunsDetected.." guns in your backpack.", 3, "Thanks?..")
 	else
-		notify("Not Holding Gun", "You need to hold out the gun you wanna modify.", 3, "Fine.")
+		notify("No Guns In Inventory", "You don't have any guns in your backpack.", 3, "Okay...")
 	end
 end)
 
 WeaponModsSection:NewButton("Infinite Magazines", "Gives the held weapons magazine infinite bullets", function()
-	local tool = game:GetService("Players").LocalPlayer.Character:FindFirstChildWhichIsA("Tool")
-
-	if tool then
+	local gunsDetected = 0
+	for _, tool in ipairs(game:GetService("Players").LocalPlayer.Backpack:GetChildren()) do
 		if tool:FindFirstChild("RepValues") then
+			gunsDetected = gunsDetected + 1
 			tool.RepValues.Mag.Value = 9999999999999
-
-			game:GetService("Players").LocalPlayer.Character.Humanoid:UnequipTools()
-			game:GetService("Players").LocalPlayer.Character.Humanoid:EquipTool(tool)
-			notify("Success", "We successfully modified your guns magazine size.", 3, "Thanks.")
-		else
-			notify("Not Holding Gun", "The item you're holding isn't a gun", 3)
 		end
+	end
+
+	if gunsDetected > 0 then
+		notify("Finished", "Modified "..gunsDetected.." guns in your backpack.", 3, "Thanks?..")
 	else
-		notify("Not Holding Gun", "You need to hold out the gun you wanna modify.", 3, "Fine.")
+		notify("No Guns In Inventory", "You don't have any guns in your backpack.", 3, "Okay...")
 	end
 end)
 
@@ -189,7 +185,7 @@ MiscSection:NewToggle("Instant Proximity Prompts", "Makes all proximity prompts 
 				descendant.HoldDuration = 0
 			end
 		end)
-		
+
 		notify("Running", "All proximity prompts are now instant.", 3, "Okay.")
 	else
 		proxConnection:Disconnect()
@@ -199,7 +195,7 @@ MiscSection:NewToggle("Instant Proximity Prompts", "Makes all proximity prompts 
 			end
 		end
 		originalHoldDurations = {}
-		
+
 		notify("Disabled", "Proximity prompts will no longer be instant.", 3, "Fine.")
 	end
 end)
