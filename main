@@ -14,6 +14,7 @@ local Window = Library.CreateLib("Laredo (by @therapisttt)", colors)
 -- tabs --
 local WeaponsTab = Window:NewTab("Weapons")
 local ShopTab = Window:NewTab("Shop")
+local SpyTab = Window:NewTab("Spying")
 local MiscTab = Window:NewTab("Miscellaneous")
 local SettingsTab = Window:NewTab("UI Settings")
 
@@ -21,17 +22,24 @@ local SettingsTab = Window:NewTab("UI Settings")
 local ItemGiverSection = WeaponsTab:NewSection("Get Item")
 local WeaponModsSection = WeaponsTab:NewSection("Modify Weapon")
 
-local SettingsSection = SettingsTab:NewSection("UI Settings")
-local ColourSettingsSection = SettingsTab:NewSection("Colour Settings")
 local ShopSection = ShopTab:NewSection("Shop")
+
+local SpySection = SpyTab:NewSection("Monitoring")
 
 local MiscSection = MiscTab:NewSection("Miscellaneous")
 local MiscOtherScriptsSection = MiscTab:NewSection("Other Scripts")
+
+local SettingsSection = SettingsTab:NewSection("UI Settings")
+local ColourSettingsSection = SettingsTab:NewSection("Colour Settings")
 
 -- variables --
 local scriptIcon = "rbxassetid://9756596201"
 
 local showGunsOnly = false
+
+local spyingOnChat = false
+local spyingOnModCalls = false
+local monitoringAdminJoins = false
 
 -- functions --
 local function notify(title:string, text:string, duration:number, button1:string?, button2:string?)
@@ -143,11 +151,11 @@ WeaponModsSection:NewButton("Infinite Ammo Reserves", "Gives all weapons in inve
 			tool.RepValues.StoredAmmo.Value = 9999999999999
 		end
 	end
-	
+
 	if gunsDetected > 0 then
 		notify("Finished", "Modified "..gunsDetected.." guns in your backpack.", 3, "Thanks?..")
 	else
-		notify("No Guns In Inventory", "You don't have any guns in your backpack.", 3, "Okay...")
+		notify("No Guns In Inventory", "Please note that you have to equip the guns you wanna modify at least once and then press this.", 3, "Okay...")
 	end
 end)
 
@@ -163,13 +171,148 @@ WeaponModsSection:NewButton("Infinite Magazines", "Gives the held weapons magazi
 	if gunsDetected > 0 then
 		notify("Finished", "Modified "..gunsDetected.." guns in your backpack.", 3, "Thanks?..")
 	else
-		notify("No Guns In Inventory", "You don't have any guns in your backpack.", 3, "Okay...")
+		notify("No Guns In Inventory", "Please note that you have to equip the guns you wanna modify at least once and then press this.", 3, "Okay...")
 	end
 end)
 
+-- spy subsection --
+local function separateTable(tbl)
+	local str = ""
+	for i, v in ipairs(tbl) do
+		str = str .. v.Name
+		if i < #tbl then
+			str = str .. ", "
+		end
+	end
+
+	return str
+end
+
+local function scanForAdmin(specificPlayer:Player?) -- optional, leave blank to return a table of all admins in the server
+	if not specificPlayer then -- returns a table of all the admins
+		local detectedAdmins = {}
+
+		for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+			if player:IsInGroup(6550041) then
+				if player:GetRankInGroup(6550041) > 5 then -- player is at least a trial moderator
+					table.insert(detectedAdmins, player)
+				end
+			end
+		end
+
+		return detectedAdmins
+	elseif specificPlayer:IsA("Player") then -- makes sure its a player
+		if specificPlayer:IsInGroup(6550041) then
+			if specificPlayer:GetRankInGroup(6550041) > 5 then -- player is at least a trial moderator
+				return true
+			end
+		end
+	end
+
+	return false -- failsafe
+end
+
+local function checkIfHelpRequest(message) -- checks if the message is "!help" to notify player whenever someone called for admins
+	if string.sub(message, 1, 5) == "!help" then
+		return true
+	else
+		return false
+	end
+end
+
+local function auditPlayer(player:Player)
+	player.Chatted:Connect(function(message)
+		if spyingOnChat then
+			if not checkIfHelpRequest(message) then
+				if scanForAdmin(player) then -- adds a tag that says (MOD) if its a mod speaking
+					print("(MODERATOR) " .. player.Name .. ": " .. message)
+				else
+					print(player.Name .. ": " .. message)
+				end
+			else
+				local adminsPresent = scanForAdmin()
+
+				if #adminsPresent > 0 then
+					notify("ADMINS CALLED!", string.upper(player.Name) .. " CALLED FOR A MODERATOR!", 5, "Let's hope it's not for me.")
+				else
+					notify("No Moderators Present", player.Name .. " called for a moderator but none are online right now.", 5, "Hah!")
+				end
+			end
+		end
+	end)
+end
+
+game:GetService("Players").PlayerAdded:Connect(function(player) -- alerts if admin joins and monitors when the player spea
+	if monitoringAdminJoins then
+		if scanForAdmin(player) then
+			notify(
+				"MODERATOR JOINED",
+				"A moderator by the name of " .. player.Name .. " has joined the server!",
+				10,
+				"I know."
+			)
+		end
+	end
+	
+	auditPlayer(player)
+end)
+
+game:GetService("Players").PlayerAdded:Connect(function(player) -- notifies when admin leaves
+	if monitoringAdminJoins then
+		if scanForAdmin(player) then
+			notify(
+				"Moderator Left",
+				player.Name .. " left.",
+				3,
+				"Thank god."
+			)
+		end
+	end
+end)
+
+for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+	auditPlayer(player)
+end
+
+if #scanForAdmin() > 0 then
+	notify("ADMINS ARE PRESENT", separateTable(scanForAdmin()), 10, "Good to know.")
+else
+	notify("No Admins Present", "You're in the clear buddy, no one's here to stop you.", 3, "Good.")
+end
+
+SpySection:NewToggle("Chat Spy", "All messages will be logged in the console.", function(state)
+	spyingOnChat = state
+	
+	if state then
+		notify("Logging Chat", "Press F9 to open up console, this is where it will be logged.", 10, "Understood.")
+	else
+		notify("Not Logging", "The chat will not be logged in console anymore.", 3, "Okay...")
+	end
+end)
+
+SpySection:NewToggle("Monitor Calls for Moderators", "Alerts you if someone called for an administrator.", function(state)
+	spyingOnModCalls = state
+
+	if state then
+		notify("Logging Mod Requests", "When anyone calls for a moderator, you will be notified like this.", 5, "Understood.")
+	else
+		notify("Not Logging", "Moderator requests will no longer alert you.", 3, "Okay...")
+	end
+end)
+
+SpySection:NewToggle("Check for Moderators", "Alerts you if a moderator joins or is already present in the server.", function(state)
+	monitoringAdminJoins = state
+
+	if state then
+		notify("Checking for Moderators", "When a moderator joins your server, you will be notified like this.", 5, "Understood.")
+	else
+		notify("No Longer Checking For Mods", "Moderators joining will no longer alert you.", 3, "Okay...")
+	end
+end)
+--
+
 local proxConnection = nil
 local originalHoldDurations = {}
-
 MiscSection:NewToggle("Instant Proximity Prompts", "Makes all proximity prompts instant", function(state)
 	if state then
 		for _, descendant in ipairs(game.Workspace:GetDescendants()) do
