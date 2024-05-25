@@ -249,25 +249,12 @@ game:GetService("Players").PlayerAdded:Connect(function(player) -- alerts if adm
 				"MODERATOR JOINED",
 				"A moderator by the name of " .. player.Name .. " has joined the server!",
 				10,
-				"I know."
+				"Wonderful..."
 			)
 		end
 	end
 	
 	auditPlayer(player)
-end)
-
-game:GetService("Players").PlayerAdded:Connect(function(player) -- notifies when admin leaves
-	if monitoringAdminJoins then
-		if scanForAdmin(player) then
-			notify(
-				"Moderator Left",
-				player.Name .. " left.",
-				3,
-				"Thank god."
-			)
-		end
-	end
 end)
 
 for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
@@ -280,12 +267,25 @@ else
 	notify("No Admins Present", "You're in the clear buddy, no one's here to stop you.", 3, "Good.")
 end
 
-SpySection:NewToggle("Chat Spy", "All messages will be logged in the console.", function(state)
+local chatFrame = game.Players.LocalPlayer.PlayerGui.Chat.Frame
+local chatSpyCodeRan = false
+local oldTextBoxPosition = chatFrame.ChatChannelParentFrame.Position
+SpySection:NewToggle("Chat Spy (by dehoisted)", "Credits to dehoisted on github", function(state)
+	chatSpyCodeRan = state
 	spyingOnChat = state
 	
 	if state then
-		notify("Logging Chat", "Press F9 to open up console, this is where it will be logged.", 10, "Understood.")
+		if not chatSpyCodeRan then
+			loadstring(game:HttpGet('https://raw.githubusercontent.com/dehoisted/Chat-Spy/main/source/main.lua'))()
+			notify("Logging Chat", "ChatSpy was made by dehoisted on github.", 5, "Understood.")
+		else
+			chatFrame.ChatBarParentFrame.Position = chatFrame.ChatChannelParentFrame.Position + UDim2.new(UDim.new(),chatFrame.ChatChannelParentFrame.Size.Y)
+			chatFrame.ChatChannelParentFrame.Visible = true
+			notify("Logging Chat", "ChatSpy re-enabled", 3, "Understood.")
+		end
 	else
+		chatFrame.ChatBarParentFrame.Position = oldTextBoxPosition
+		game.Players.LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Visible = false
 		notify("Not Logging", "The chat will not be logged in console anymore.", 3, "Okay...")
 	end
 end)
@@ -296,7 +296,7 @@ SpySection:NewToggle("Monitor Calls for Moderators", "Alerts you if someone call
 	if state then
 		notify("Logging Mod Requests", "When anyone calls for a moderator, you will be notified like this.", 5, "Understood.")
 	else
-		notify("Not Logging", "Moderator requests will no longer alert you.", 3, "Okay...")
+		notify("Not Logging", "Moderator requests will no longer alert you.", 10, "Okay...")
 	end
 end)
 
