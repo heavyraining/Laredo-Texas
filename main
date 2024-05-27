@@ -261,12 +261,6 @@ for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
 	auditPlayer(player)
 end
 
-if #scanForAdmin() > 0 then
-	notify("ADMINS ARE PRESENT", separateTable(scanForAdmin()), 10, "Good to know.")
-else
-	notify("No Admins Present", "You're in the clear buddy, no one's here to stop you.", 3, "Good.")
-end
-
 local chatFrame = game.Players.LocalPlayer.PlayerGui.Chat.Frame
 local chatSpyCodeRan = false
 local oldTextBoxPosition = chatFrame.ChatChannelParentFrame.Position
@@ -355,4 +349,10 @@ for theme, color in pairs(colors) do
 	ColourSettingsSection:NewColorPicker(theme, "Change your "..theme, color, function(color3)
 		Library:ChangeColor(theme, color3)
 	end)
+end
+
+if #scanForAdmin() > 0 then -- initial admin scan
+	notify("ADMINS ARE PRESENT", separateTable(scanForAdmin()), 10, "Good to know.")
+else
+	notify("No Admins Present", "You're in the clear buddy, no one's here to stop you.", 3, "Good.")
 end
