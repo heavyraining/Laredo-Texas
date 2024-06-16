@@ -253,7 +253,7 @@ game:GetService("Players").PlayerAdded:Connect(function(player) -- alerts if adm
 			)
 		end
 	end
-	
+
 	auditPlayer(player)
 end)
 
@@ -261,26 +261,22 @@ for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
 	auditPlayer(player)
 end
 
-local chatFrame = game.Players.LocalPlayer.PlayerGui.Chat.Frame
+local chatFrame = game.CoreGui.ExperienceChat.appLayout.chatWindow
 local chatSpyCodeRan = false
-local oldTextBoxPosition = chatFrame.ChatChannelParentFrame.Position
-SpySection:NewToggle("Chat Spy (by dehoisted)", "Credits to dehoisted on github", function(state)
+SpySection:NewToggle("Chat Spy", "Credits to dehoisted on github", function(state)
 	chatSpyCodeRan = state
 	spyingOnChat = state
-	
+
 	if state then
 		if not chatSpyCodeRan then
-			loadstring(game:HttpGet('https://raw.githubusercontent.com/dehoisted/Chat-Spy/main/source/main.lua'))()
-			notify("Logging Chat", "ChatSpy was made by dehoisted on github.", 5, "Understood.")
+			notify("Logging Chat", "Chat is now being logged.", 5, "Understood.")
 		else
-			chatFrame.ChatBarParentFrame.Position = chatFrame.ChatChannelParentFrame.Position + UDim2.new(UDim.new(),chatFrame.ChatChannelParentFrame.Size.Y)
-			chatFrame.ChatChannelParentFrame.Visible = true
-			notify("Logging Chat", "ChatSpy re-enabled", 3, "Understood.")
+			chatFrame.Visible = true
+			notify("Logging Chat", "Chat log re-enabled", 3, "Understood.")
 		end
 	else
-		chatFrame.ChatBarParentFrame.Position = oldTextBoxPosition
-		game.Players.LocalPlayer.PlayerGui.Chat.Frame.ChatChannelParentFrame.Visible = false
-		notify("Not Logging", "The chat will not be logged in console anymore.", 3, "Okay...")
+		chatFrame.Visible = false
+		notify("Not Logging", "The chat will not be logged anymore.", 3, "Okay...")
 	end
 end)
 
